@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Market Geometry Monitor</title>
+  <meta name="description" content="Daily evolving-SVD market geometry and degeneracy monitor.">
+  <link rel="stylesheet" href="/static/styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="brand">SVD LAB</div>
+      <div class="subbrand">Nonlinear Analysis Tools</div>
+    </div>
+    <div class="portfolio">
+      <span>Robotics</span><span>Processes</span><span class="active">Markets</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div>
+        <div class="eyebrow">MARKET GEOMETRY MONITOR</div>
+        <h1>Daily SVD Degeneracy Analysis</h1>
+        <p>
+          Measures how the local market-response geometry evolves across
+          short-, medium-, and long-horizon windows.
+        </p>
+      </div>
+      <button id="refreshButton">Refresh data</button>
+    </section>
+
+    <section class="summary-grid">
+      <article class="summary-card">
+        <div class="label">CURRENT STATUS</div>
+        <div id="overallStatus" class="status">Loading…</div>
+        <div id="asOf" class="muted"></div>
+      </article>
+
+      <article class="summary-card">
+        <div class="label">CROSS-WINDOW CONFIRMATION</div>
+        <div id="confirmation" class="big-number">—</div>
+        <div class="muted">63 / 126 / 252 trading-day models</div>
+      </article>
+
+      <article class="summary-card">
+        <div class="label">DOMINANT WEAK-DIRECTION DRIVER</div>
+        <div id="dominantDriver" class="driver">—</div>
+        <div id="dominantShare" class="muted"></div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">Time-scale diagnostics</div>
+      <div id="windowCards" class="window-grid"></div>
+    </section>
+
+    <section class="two-column">
+      <section class="panel">
+        <div class="panel-title">Weak-direction composition</div>
+        <div id="contributionBars"></div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-title">Interpretation</div>
+        <p id="interpretation" class="interpretation"></p>
+
+        <div class="explain-box">
+          <div class="explain-title">Why is this flagged?</div>
+          <div id="whyFlagged"></div>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title chart-title">
+        <span>Geometry trajectory</span>
+        <select id="windowSelect">
+          <option value="63">63 day</option>
+          <option value="126" selected>126 day</option>
+          <option value="252">252 day</option>
+        </select>
+      </div>
+      <div class="chart-container">
+        <canvas id="geometryChart"></canvas>
+      </div>
+    </section>
+
+    <section class="panel research-note">
+      <div class="panel-title">Research boundary</div>
+      <p id="researchNote"></p>
+    </section>
+  </main>
+
+  <footer>
+    <strong>SVD LAB</strong> · A portfolio of nonlinear analysis tools using evolving singular-value geometry.
+  </footer>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
