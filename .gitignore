@@ -1,0 +1,6 @@
+.venv/
+__pycache__/
+*.pyc
+.vscode/
+market_geometry_dataset.csv
+market_geometry_svd_diagnostics.csv
