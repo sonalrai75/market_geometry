@@ -1,0 +1,47 @@
+name: Daily Market Geometry Refresh
+
+on:
+  schedule:
+    # 23:45 UTC, Monday-Friday.
+    # This is 7:45 PM EDT / 6:45 PM EST in New York.
+    - cron: "45 23 * * 1-5"
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Build latest dashboard snapshot
+        run: python research/build_dashboard_snapshot.py
+
+      - name: Commit updated snapshot
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add data/dashboard_snapshot.json
+
+          if git diff --cached --quiet; then
+            echo "No snapshot changes to commit."
+            exit 0
+          fi
+
+          git commit -m "Update daily market geometry snapshot"
+          git push
