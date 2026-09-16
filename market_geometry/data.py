@@ -34,8 +34,10 @@ RAW_MARKET_COLS = [
 RAW_COLS = RAW_MARKET_COLS + list(FRED_SERIES.keys())
 
 
+HISTORY_START = "2005-01-01"
+
 def _start_date() -> str:
-    return (date.today() - timedelta(days=365 * 5 + 30)).isoformat()
+    return HISTORY_START
 
 
 def _cache_dir() -> Path:
