@@ -1,20 +1,15 @@
 #!/usr/bin/env python
 """
-Prototype evolving-SVD analysis for the Market Geometry dataset.
+Leakage-safe rolling SVD analysis for the Market Geometry dataset.
 
-Method:
-1. Standardize inputs and outputs.
-2. On each rolling window, fit a local multivariate ridge model:
-      Y ~= X B
-   so the local Jacobian estimate is J = B^T.
-3. Compute SVD(J) and track:
-      singular values,
-      condition number,
-      weakest input-space direction,
-      rotation of that direction through time.
-4. Export diagnostics for later fold/cusp investigation.
+Purpose
+-------
+Estimate how the market-state -> market-response geometry evolves through time.
 
-This is a first empirical geometry diagnostic, not proof of a Thom catastrophe.
+Important:
+- The 5-day forward-return targets are only used once they would have been observable.
+- For a diagnostic dated t, the regression sample ends at t-5 trading days.
+- This is still a rolling linear approximation, not yet proof of a Thom catastrophe.
 """
 
 from __future__ import annotations
@@ -25,7 +20,8 @@ import pandas as pd
 DATA = Path("market_geometry_dataset.csv")
 OUT = Path("market_geometry_svd_diagnostics.csv")
 
-WINDOW = 126       # about 6 months
+WINDOW = 126
+HORIZON = 5
 RIDGE = 1.0e-3
 
 XCOLS = [
@@ -53,7 +49,7 @@ def zscore(a):
     return (a - mu) / sd
 
 def principal_angle(v1, v2):
-    # Singular-vector sign is arbitrary, so use abs(dot).
+    # Singular-vector sign is arbitrary, so compare |dot|.
     c = np.clip(abs(float(np.dot(v1, v2))), 0.0, 1.0)
     return np.degrees(np.arccos(c))
 
@@ -70,8 +66,14 @@ def main():
     rows = []
     prev_vmin = None
 
-    for i in range(WINDOW - 1, len(use)):
-        w = use.iloc[i-WINDOW+1:i+1].dropna()
+    # For diagnostic date i, only train through i-HORIZON.
+    first_i = WINDOW - 1 + HORIZON
+
+    for i in range(first_i, len(use)):
+        train_end = i - HORIZON
+        train_start = train_end - WINDOW + 1
+
+        w = use.iloc[train_start:train_end + 1].dropna()
         if len(w) < int(WINDOW * 0.80):
             continue
 
@@ -84,15 +86,20 @@ def main():
 
         J = local_jacobian_ridge(X, Y)
         U, s, Vt = np.linalg.svd(J, full_matrices=False)
+
         positive = s[s > 1e-12]
         cond = positive.max() / positive.min() if len(positive) else np.nan
 
+        # This is the weakest ACTIVE right-singular direction.
+        # Because J is rectangular (4 outputs x 8 inputs), there is also
+        # a larger exact null space not represented by full_matrices=False.
         vmin = Vt[-1].copy()
         rotation = np.nan if prev_vmin is None else principal_angle(prev_vmin, vmin)
         prev_vmin = vmin
 
         row = {
             "Date": use.index[i],
+            "TrainingEndDate": use.index[train_end],
             "SigmaMax": s[0],
             "SigmaMin": s[-1],
             "ConditionNumber": cond,
@@ -109,14 +116,14 @@ def main():
     print(f"Saved {len(out):,} diagnostic rows to {OUT.resolve()}")
 
     if len(out):
-        print("\nLargest weak-direction rotations:")
+        print("\nLargest weak-direction rotations (leakage-safe):")
         print(out.nlargest(10, "WeakDirectionRotationDeg")[
-            ["SigmaMin", "ConditionNumber", "WeakDirectionRotationDeg"]
+            ["TrainingEndDate", "SigmaMin", "ConditionNumber", "WeakDirectionRotationDeg"]
         ].to_string())
 
-        print("\nSmallest singular values:")
+        print("\nSmallest singular values (leakage-safe):")
         print(out.nsmallest(10, "SigmaMin")[
-            ["SigmaMin", "ConditionNumber", "WeakDirectionRotationDeg"]
+            ["TrainingEndDate", "SigmaMin", "ConditionNumber", "WeakDirectionRotationDeg"]
         ].to_string())
 
 if __name__ == "__main__":
