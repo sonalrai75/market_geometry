@@ -2,10 +2,7 @@ name: Daily Market Geometry Refresh
 
 on:
   schedule:
-    # 23:45 UTC, Monday-Friday.
-    # This is 7:45 PM EDT / 6:45 PM EST in New York.
     - cron: "45 23 * * 1-5"
-
   workflow_dispatch:
 
 permissions:
@@ -29,7 +26,23 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build latest dashboard snapshot
-        run: python research/build_dashboard_snapshot.py
+        shell: bash
+        run: |
+          set -e
+          for attempt in 1 2 3; do
+            echo "Snapshot build attempt $attempt of 3"
+            if python research/build_dashboard_snapshot.py; then
+              exit 0
+            fi
+
+            if [ "$attempt" -lt 3 ]; then
+              echo "Build failed. Waiting 30 seconds before retry..."
+              sleep 30
+            fi
+          done
+
+          echo "Snapshot build failed after 3 attempts."
+          exit 1
 
       - name: Commit updated snapshot
         run: |
