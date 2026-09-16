@@ -21,17 +21,22 @@ FRED_SERIES = {
     "BroadUSD": "DTWEXBGS",
 }
 
+RAW_MARKET_COLS = [
+    "SPY_AdjClose",
+    "SPY_Volume",
+    "QQQ_AdjClose",
+    "QQQ_Volume",
+    "RSP_AdjClose",
+    "RSP_Volume",
+]
+RAW_COLS = RAW_MARKET_COLS + list(FRED_SERIES.keys())
+
 
 def _start_date() -> str:
-    # The live monitor needs enough history for a 252-day model plus a
-    # trailing 252-day reference distribution. Five years provides margin
-    # while keeping daily refreshes much lighter than the full research set.
     return (date.today() - timedelta(days=365 * 5 + 30)).isoformat()
 
 
 def _cache_dir() -> Path:
-    # Vercel serverless storage is ephemeral. /tmp is writable during an
-    # invocation; locally we use the repository's data/ folder.
     base = Path("/tmp/market_geometry") if os.getenv("VERCEL") else Path("data")
     base.mkdir(parents=True, exist_ok=True)
     return base
@@ -44,18 +49,24 @@ def cache_path() -> Path:
 def fetch_fred(series_id: str, start: str) -> pd.Series:
     params = urllib.parse.urlencode({"id": series_id, "cosd": start})
     url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?{params}"
+
     req = urllib.request.Request(
         url,
-        headers={"User-Agent": "Mozilla/5.0 MarketGeometryMonitor/0.2"},
+        headers={"User-Agent": "Mozilla/5.0 MarketGeometryMonitor/1.1"},
     )
-    with urllib.request.urlopen(req, timeout=45) as response:
+    with urllib.request.urlopen(req, timeout=60) as response:
         raw = response.read()
 
     frame = pd.read_csv(io.BytesIO(raw))
     date_col, value_col = frame.columns[:2]
     frame[date_col] = pd.to_datetime(frame[date_col], errors="coerce")
     frame[value_col] = pd.to_numeric(frame[value_col], errors="coerce")
-    return frame.set_index(date_col)[value_col].sort_index()
+
+    return (
+        frame.dropna(subset=[date_col])
+        .set_index(date_col)[value_col]
+        .sort_index()
+    )
 
 
 def _yf_field(raw: pd.DataFrame, field: str, ticker: str) -> pd.Series:
@@ -65,11 +76,13 @@ def _yf_field(raw: pd.DataFrame, field: str, ticker: str) -> pd.Series:
             return raw[key]
         if field == "Adj Close" and ("Close", ticker) in raw.columns:
             return raw[("Close", ticker)]
+
     raise KeyError(f"Could not locate {field} for {ticker} in yfinance response.")
 
 
 def fetch_etfs(start: str) -> pd.DataFrame:
     tickers = ["SPY", "QQQ", "RSP"]
+
     raw = yf.download(
         tickers,
         start=start,
@@ -78,6 +91,7 @@ def fetch_etfs(start: str) -> pd.DataFrame:
         group_by="column",
         threads=True,
     )
+
     if raw.empty:
         raise RuntimeError("No ETF data returned by market-data provider.")
 
@@ -88,10 +102,27 @@ def fetch_etfs(start: str) -> pd.DataFrame:
         pass
 
     out = pd.DataFrame(index=idx)
+
     for ticker in tickers:
         out[f"{ticker}_AdjClose"] = _yf_field(raw, "Adj Close", ticker)
         out[f"{ticker}_Volume"] = _yf_field(raw, "Volume", ticker)
+
     return out.sort_index()
+
+
+def fetch_raw_dataset(start: str) -> pd.DataFrame:
+    macro = pd.DataFrame()
+
+    for name, series_id in FRED_SERIES.items():
+        macro[name] = fetch_fred(series_id, start)
+
+    market = fetch_etfs(start)
+    df = market.join(macro, how="left").sort_index()
+
+    # Macro releases do not necessarily occur on every market session.
+    df[list(FRED_SERIES)] = df[list(FRED_SERIES)].ffill(limit=7)
+
+    return df
 
 
 def _annualized_vol(ret: pd.Series, window: int = 20) -> pd.Series:
@@ -103,18 +134,8 @@ def _rolling_drawdown(px: pd.Series, window: int = 63) -> pd.Series:
     return px / peak - 1.0
 
 
-def build_dataset(save: bool = True) -> pd.DataFrame:
-    start = _start_date()
-
-    macro = pd.DataFrame()
-    for name, series_id in FRED_SERIES.items():
-        macro[name] = fetch_fred(series_id, start)
-
-    market = fetch_etfs(start)
-    df = market.join(macro, how="left").sort_index()
-
-    # FRED series do not always update on every trading date.
-    df[list(FRED_SERIES)] = df[list(FRED_SERIES)].ffill(limit=5)
+def add_features(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy().sort_index()
 
     df["RSP_SPY_Ratio"] = df["RSP_AdjClose"] / df["SPY_AdjClose"]
 
@@ -130,12 +151,19 @@ def build_dataset(save: bool = True) -> pd.DataFrame:
     df["SPY_RVol20"] = _annualized_vol(df["SPY_Return1D"], 20)
     df["SPY_Drawdown63"] = _rolling_drawdown(df["SPY_AdjClose"], 63)
 
-    # The research model uses leakage-safe 5-day forward responses. The most
-    # recent HORIZON days therefore cannot themselves be training observations.
-    df["SPY_Fwd5D_Return"] = df["SPY_AdjClose"].shift(-5) / df["SPY_AdjClose"] - 1
-    df["QQQ_Fwd5D_Return"] = df["QQQ_AdjClose"].shift(-5) / df["QQQ_AdjClose"] - 1
+    df["SPY_Fwd5D_Return"] = (
+        df["SPY_AdjClose"].shift(-5) / df["SPY_AdjClose"] - 1
+    )
+    df["QQQ_Fwd5D_Return"] = (
+        df["QQQ_AdjClose"].shift(-5) / df["QQQ_AdjClose"] - 1
+    )
 
     df.index.name = "Date"
+    return df
+
+
+def build_dataset(save: bool = True) -> pd.DataFrame:
+    df = add_features(fetch_raw_dataset(_start_date()))
 
     if save:
         df.to_csv(cache_path(), float_format="%.10g")
@@ -143,18 +171,74 @@ def build_dataset(save: bool = True) -> pd.DataFrame:
     return df
 
 
+def refresh_dataset(
+    save: bool = True,
+    overlap_days: int = 45,
+) -> pd.DataFrame:
+    """
+    Incremental local refresh.
+
+    If an existing CSV is present, only a small overlapping recent period is
+    downloaded. The overlap lets revised macro values and rolling features be
+    rebuilt safely. If no CSV exists, a full five-year dataset is created.
+    """
+    path = cache_path()
+
+    if not path.exists():
+        return build_dataset(save=save)
+
+    existing = (
+        pd.read_csv(path, parse_dates=["Date"])
+        .set_index("Date")
+        .sort_index()
+    )
+
+    if existing.empty:
+        return build_dataset(save=save)
+
+    latest = existing.index.max()
+    refresh_start = (
+        latest - pd.Timedelta(days=overlap_days)
+    ).date().isoformat()
+
+    recent_raw = fetch_raw_dataset(refresh_start)
+
+    available_raw = [c for c in RAW_COLS if c in existing.columns]
+    old_raw = existing[available_raw].copy()
+
+    # Replace the overlapping tail with freshly downloaded values.
+    cutoff = pd.Timestamp(refresh_start)
+    old_raw = old_raw[old_raw.index < cutoff]
+
+    merged = pd.concat([old_raw, recent_raw], axis=0).sort_index()
+    merged = merged[~merged.index.duplicated(keep="last")]
+
+    # Preserve expected raw columns and forward-fill macro releases.
+    for col in RAW_COLS:
+        if col not in merged.columns:
+            merged[col] = np.nan
+
+    merged[list(FRED_SERIES)] = merged[list(FRED_SERIES)].ffill(limit=7)
+
+    df = add_features(merged)
+
+    if save:
+        df.to_csv(path, float_format="%.10g")
+
+    return df
+
+
 def load_dataset(refresh: bool = False) -> pd.DataFrame:
     path = cache_path()
 
-    if refresh or not path.exists():
+    if refresh:
+        return refresh_dataset(save=True)
+
+    if not path.exists():
         return build_dataset(save=True)
 
-    # Locally, don't keep stale data across days. Vercel /tmp may vanish anyway.
-    try:
-        mtime_date = date.fromtimestamp(path.stat().st_mtime)
-        if mtime_date < date.today():
-            return build_dataset(save=True)
-    except OSError:
-        pass
-
-    return pd.read_csv(path, parse_dates=["Date"]).set_index("Date").sort_index()
+    return (
+        pd.read_csv(path, parse_dates=["Date"])
+        .set_index("Date")
+        .sort_index()
+    )

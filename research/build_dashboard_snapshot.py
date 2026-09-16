@@ -8,13 +8,11 @@ from pathlib import Path
 
 import pandas as pd
 
-# Make the repository root importable when this script is run as:
-# python research/build_dashboard_snapshot.py
 ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from market_geometry.data import build_dataset
+from market_geometry.data import refresh_dataset
 from market_geometry.engine import build_dashboard
 
 DATA_DIR = ROOT / "data"
@@ -43,8 +41,8 @@ def sanitize(value):
 def main():
     DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-    print("Downloading latest public market and macro data...")
-    df = build_dataset(save=True)
+    print("Refreshing public data incrementally...")
+    df = refresh_dataset(save=True, overlap_days=45)
 
     print("Computing 63 / 126 / 252-day SVD dashboard...")
     payload = build_dashboard(df)
@@ -58,6 +56,7 @@ def main():
     print(f"Saved snapshot: {SNAPSHOT}")
     print(f"As of: {payload['as_of']}")
     print(f"Overall status: {payload['overall_status']}")
+    print(f"Status-history rows: {len(payload.get('status_history', []))}")
 
 
 if __name__ == "__main__":

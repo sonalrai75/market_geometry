@@ -6,6 +6,14 @@ import pandas as pd
 from .config import WINDOWS, HORIZON, RIDGE, XCOLS, YCOLS, FRIENDLY
 
 
+SEVERITY = {
+    "NORMAL": 0,
+    "GEOMETRY SHIFT": 1,
+    "APPROACHING DEGENERACY": 2,
+    "HIGH DEGENERACY": 3,
+}
+
+
 def _standardize(a: np.ndarray) -> np.ndarray:
     mean = np.nanmean(a, axis=0)
     std = np.nanstd(a, axis=0, ddof=1)
@@ -14,15 +22,12 @@ def _standardize(a: np.ndarray) -> np.ndarray:
 
 
 def _jacobian(X: np.ndarray, Y: np.ndarray) -> np.ndarray:
-    # Y ≈ X B, therefore J = B^T maps standardized market state to
-    # standardized response coordinates.
     p = X.shape[1]
     B = np.linalg.solve(X.T @ X + RIDGE * np.eye(p), X.T @ Y)
     return B.T
 
 
 def _principal_angle(v1: np.ndarray, v2: np.ndarray) -> float:
-    # v and -v are the same singular direction.
     cosine = np.clip(abs(float(np.dot(v1, v2))), 0.0, 1.0)
     return float(np.degrees(np.arccos(cosine)))
 
@@ -30,10 +35,12 @@ def _principal_angle(v1: np.ndarray, v2: np.ndarray) -> float:
 def _single_date_svd(use: pd.DataFrame, i: int, window: int):
     train_end = i - HORIZON
     train_start = train_end - window + 1
+
     if train_start < 0:
         return None
 
     train = use.iloc[train_start:train_end + 1].dropna()
+
     if len(train) < int(window * 0.80):
         return None
 
@@ -68,6 +75,7 @@ def build_history(df: pd.DataFrame, window: int) -> pd.DataFrame:
 
     for i in range(window - 1 + HORIZON, len(use)):
         result = _single_date_svd(use, i, window)
+
         if result is None:
             continue
 
@@ -103,13 +111,16 @@ def build_history(df: pd.DataFrame, window: int) -> pd.DataFrame:
 
 def _percentile(reference: pd.Series, current: float) -> float:
     ref = reference.replace([np.inf, -np.inf], np.nan).dropna()
+
     if len(ref) == 0 or not np.isfinite(current):
         return np.nan
+
     return float(100.0 * (ref < current).mean())
 
 
 def _fraction(series: pd.Series, rising: bool, sessions: int = 10) -> float:
     recent = series.dropna().tail(sessions + 1)
+
     if len(recent) < 3:
         return np.nan
 
@@ -121,33 +132,43 @@ def _classify(metrics: dict) -> tuple[str, list[str], int]:
     score = 0
     reasons: list[str] = []
 
-    # Low sigma ratio = closer to active degeneracy.
-    if metrics["sigma_ratio_percentile"] <= 10:
-        score += 2
-        reasons.append("sigma-min / sigma-max is in the bottom 10% of its trailing-year range")
-    elif metrics["sigma_ratio_percentile"] <= 20:
-        score += 1
-        reasons.append("the active singular-value ratio is below its normal range")
+    ratio_pct = metrics.get("sigma_ratio_percentile")
+    cond_pct = metrics.get("condition_percentile")
+    rot_pct = metrics.get("rotation_percentile")
+    sigma_decline = metrics.get("sigma_decline_fraction_10d")
+    cond_rise = metrics.get("condition_rise_fraction_10d")
 
-    if metrics["condition_percentile"] >= 95:
-        score += 2
-        reasons.append("condition number is above the 95th trailing-year percentile")
-    elif metrics["condition_percentile"] >= 85:
-        score += 1
-        reasons.append("condition number is elevated")
+    if ratio_pct is not None and np.isfinite(ratio_pct):
+        if ratio_pct <= 10:
+            score += 2
+            reasons.append(
+                "sigma-min / sigma-max is in the bottom 10% of its trailing-year range"
+            )
+        elif ratio_pct <= 20:
+            score += 1
+            reasons.append("the active singular-value ratio is below its normal range")
 
-    if metrics["rotation_percentile"] >= 95:
-        score += 2
-        reasons.append("weak-direction rotation is above the 95th trailing-year percentile")
-    elif metrics["rotation_percentile"] >= 85:
-        score += 1
-        reasons.append("weak-direction rotation is elevated")
+    if cond_pct is not None and np.isfinite(cond_pct):
+        if cond_pct >= 95:
+            score += 2
+            reasons.append("condition number is above the 95th trailing-year percentile")
+        elif cond_pct >= 85:
+            score += 1
+            reasons.append("condition number is elevated")
 
-    if metrics["sigma_decline_fraction_10d"] >= 0.70:
+    if rot_pct is not None and np.isfinite(rot_pct):
+        if rot_pct >= 95:
+            score += 2
+            reasons.append("weak-direction rotation is above the 95th trailing-year percentile")
+        elif rot_pct >= 85:
+            score += 1
+            reasons.append("weak-direction rotation is elevated")
+
+    if sigma_decline is not None and np.isfinite(sigma_decline) and sigma_decline >= 0.70:
         score += 1
         reasons.append("sigma-min has declined on most of the last 10 sessions")
 
-    if metrics["condition_rise_fraction_10d"] >= 0.70:
+    if cond_rise is not None and np.isfinite(cond_rise) and cond_rise >= 0.70:
         score += 1
         reasons.append("conditioning has deteriorated on most of the last 10 sessions")
 
@@ -166,23 +187,15 @@ def _classify(metrics: dict) -> tuple[str, list[str], int]:
     return status, reasons, score
 
 
-def analyze_window(df: pd.DataFrame, window: int) -> dict:
-    history = build_history(df, window)
+def _detail_row(history: pd.DataFrame, i: int) -> dict:
+    current = history.iloc[i]
+    start = max(0, i - 252)
+    reference = history.iloc[start:i]
 
-    current = history.iloc[-1]
-    reference = history.iloc[max(0, len(history) - 253):-1]
+    sigma_series = history["SigmaMin"].iloc[max(0, i - 10):i + 1]
+    cond_series = history["ConditionNumber"].iloc[max(0, i - 10):i + 1]
 
     metrics = {
-        "window": window,
-        "date": history.index[-1].strftime("%Y-%m-%d"),
-        "sigma_min": float(current["SigmaMin"]),
-        "sigma_max": float(current["SigmaMax"]),
-        "sigma_ratio": float(current["SigmaRatio"]),
-        "condition_number": float(current["ConditionNumber"]),
-        "rotation_deg": (
-            None if pd.isna(current["RotationDeg"])
-            else float(current["RotationDeg"])
-        ),
         "sigma_ratio_percentile": _percentile(
             reference["SigmaRatio"], current["SigmaRatio"]
         ),
@@ -193,12 +206,14 @@ def analyze_window(df: pd.DataFrame, window: int) -> dict:
             reference["RotationDeg"], current["RotationDeg"]
         ),
         "sigma_decline_fraction_10d": _fraction(
-            history["SigmaMin"], rising=False
+            sigma_series, rising=False
         ),
         "condition_rise_fraction_10d": _fraction(
-            history["ConditionNumber"], rising=True
+            cond_series, rising=True
         ),
     }
+
+    status, reasons, score = _classify(metrics)
 
     contributions = [
         {
@@ -209,50 +224,67 @@ def analyze_window(df: pd.DataFrame, window: int) -> dict:
         for variable in XCOLS
     ]
     contributions.sort(key=lambda item: item["value"], reverse=True)
-    metrics["contributions"] = contributions
 
-    status, reasons, score = _classify(metrics)
-    metrics["status"] = status
-    metrics["reasons"] = reasons
-    metrics["degeneracy_score"] = score
-
-    recent = history.tail(252).reset_index()
-    metrics["history"] = [
-        {
-            "date": row["Date"].strftime("%Y-%m-%d"),
-            "sigma_ratio": float(row["SigmaRatio"]),
-            "condition": float(row["ConditionNumber"]),
-            "rotation": (
-                None if pd.isna(row["RotationDeg"])
-                else float(row["RotationDeg"])
-            ),
-        }
-        for _, row in recent.iterrows()
-    ]
-
-    return metrics
-
-
-def build_dashboard(df: pd.DataFrame) -> dict:
-    windows = [analyze_window(df, window) for window in WINDOWS]
-
-    severity = {
-        "NORMAL": 0,
-        "GEOMETRY SHIFT": 1,
-        "APPROACHING DEGENERACY": 2,
-        "HIGH DEGENERACY": 3,
+    return {
+        "date": history.index[i].strftime("%Y-%m-%d"),
+        "sigma_min": float(current["SigmaMin"]),
+        "sigma_max": float(current["SigmaMax"]),
+        "sigma_ratio": float(current["SigmaRatio"]),
+        "condition_number": float(current["ConditionNumber"]),
+        "rotation_deg": (
+            None if pd.isna(current["RotationDeg"])
+            else float(current["RotationDeg"])
+        ),
+        **metrics,
+        "status": status,
+        "degeneracy_score": score,
+        "reasons": reasons,
+        "contributions": contributions,
     }
 
+
+def analyze_window(df: pd.DataFrame, window: int) -> dict:
+    history = build_history(df, window)
+
+    start = max(0, len(history) - 252)
+    history_detail = [
+        _detail_row(history, i)
+        for i in range(start, len(history))
+    ]
+
+    current = history_detail[-1]
+
+    return {
+        "window": window,
+        **current,
+        "history": [
+            {
+                "date": row["date"],
+                "sigma_ratio": row["sigma_ratio"],
+                "condition": row["condition_number"],
+                "rotation": row["rotation_deg"],
+                "status": row["status"],
+            }
+            for row in history_detail
+        ],
+        "history_detail": history_detail,
+    }
+
+
+def _overall_status(window_rows: list[dict]) -> tuple[str, int, int]:
     confirming = sum(
-        severity[item["status"]] >= 2
-        for item in windows
+        SEVERITY.get(row["status"], 0) >= 2
+        for row in window_rows
     )
     shifting_or_worse = sum(
-        severity[item["status"]] >= 1
-        for item in windows
+        SEVERITY.get(row["status"], 0) >= 1
+        for row in window_rows
     )
 
-    highest = max(windows, key=lambda item: severity[item["status"]])
+    highest = max(
+        window_rows,
+        key=lambda row: SEVERITY.get(row["status"], 0),
+    )
 
     if confirming >= 2:
         overall = (
@@ -265,7 +297,55 @@ def build_dashboard(df: pd.DataFrame) -> dict:
     else:
         overall = "NORMAL"
 
+    return overall, confirming, shifting_or_worse
+
+
+def _build_status_history(windows: list[dict]) -> list[dict]:
+    by_window = {
+        item["window"]: {
+            row["date"]: row
+            for row in item["history_detail"]
+        }
+        for item in windows
+    }
+
+    common_dates = set.intersection(
+        *(set(rows.keys()) for rows in by_window.values())
+    )
+
+    result = []
+
+    for date in sorted(common_dates):
+        rows = [
+            by_window[window][date]
+            for window in WINDOWS
+        ]
+
+        overall, confirming, shifting_or_worse = _overall_status(rows)
+
+        result.append(
+            {
+                "date": date,
+                "overall_status": overall,
+                "confirming_windows": confirming,
+                "shifting_or_worse_windows": shifting_or_worse,
+                "window_statuses": {
+                    str(window): by_window[window][date]["status"]
+                    for window in WINDOWS
+                },
+            }
+        )
+
+    return result[-252:]
+
+
+def build_dashboard(df: pd.DataFrame) -> dict:
+    windows = [analyze_window(df, window) for window in WINDOWS]
+
+    overall, confirming, shifting_or_worse = _overall_status(windows)
+
     aggregate: dict[str, list[float]] = {}
+
     for item in windows:
         for contribution in item["contributions"]:
             aggregate.setdefault(contribution["name"], []).append(
@@ -276,7 +356,10 @@ def build_dashboard(df: pd.DataFrame) -> dict:
         {"name": name, "value": float(np.mean(values))}
         for name, values in aggregate.items()
     ]
-    aggregate_contributions.sort(key=lambda item: item["value"], reverse=True)
+    aggregate_contributions.sort(
+        key=lambda item: item["value"],
+        reverse=True,
+    )
 
     leaders = aggregate_contributions[:3]
     leader_text = ", ".join(
@@ -314,6 +397,7 @@ def build_dashboard(df: pd.DataFrame) -> dict:
         "windows": windows,
         "aggregate_contributions": aggregate_contributions,
         "interpretation": interpretation,
+        "status_history": _build_status_history(windows),
         "research_note": (
             "Degeneracy flags describe the estimated local response geometry. "
             "They are not trading signals, probability forecasts, or proof of "

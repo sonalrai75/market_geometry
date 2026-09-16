@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Query
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 
@@ -13,7 +13,7 @@ SNAPSHOT = ROOT / "data" / "dashboard_snapshot.json"
 
 app = FastAPI(
     title="Market Geometry Monitor",
-    version="0.3.0",
+    version="1.1.0",
     description="Daily evolving-SVD market geometry and degeneracy monitor.",
 )
 
@@ -34,7 +34,7 @@ def health():
     }
 
 
-def _read_snapshot():
+def _read_snapshot() -> dict:
     if not SNAPSHOT.exists():
         raise HTTPException(
             status_code=503,
@@ -60,10 +60,7 @@ def dashboard():
 
 
 @app.get("/api/history")
-def history(window: int = 126):
-    if window not in (63, 126, 252):
-        raise HTTPException(status_code=400, detail="window must be 63, 126, or 252")
-
+def history(window: int = Query(126, enum=[63, 126, 252])):
     payload = _read_snapshot()
     for item in payload.get("windows", []):
         if item.get("window") == window:
@@ -71,6 +68,54 @@ def history(window: int = 126):
                 "window": window,
                 "as_of": item.get("date"),
                 "history": item.get("history", []),
+                "history_detail": item.get("history_detail", []),
             }
 
-    raise HTTPException(status_code=404, detail="Window not found in snapshot.")
+    raise HTTPException(status_code=404, detail="Window not found.")
+
+
+@app.get("/api/status-history")
+def status_history():
+    payload = _read_snapshot()
+    return {
+        "as_of": payload.get("as_of"),
+        "history": payload.get("status_history", []),
+    }
+
+
+@app.get("/api/explorer")
+def explorer(date: str):
+    payload = _read_snapshot()
+    matches = []
+
+    for item in payload.get("windows", []):
+        for row in item.get("history_detail", []):
+            if row.get("date") == date:
+                matches.append(
+                    {
+                        "window": item.get("window"),
+                        **row,
+                    }
+                )
+                break
+
+    if not matches:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No historical geometry is available for {date}.",
+        )
+
+    overall = next(
+        (
+            row
+            for row in payload.get("status_history", [])
+            if row.get("date") == date
+        ),
+        None,
+    )
+
+    return {
+        "date": date,
+        "overall": overall,
+        "windows": sorted(matches, key=lambda x: x["window"]),
+    }

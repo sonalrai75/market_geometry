@@ -14,9 +14,11 @@
       <div class="brand">SVD LAB</div>
       <div class="subbrand">Nonlinear Analysis Tools</div>
     </div>
-    <div class="portfolio">
-      <span>Robotics</span><span>Processes</span><span class="active">Markets</span>
-    </div>
+    <nav class="portfolio">
+      <span>Robotics</span>
+      <span>Processes</span>
+      <span class="active">Markets</span>
+    </nav>
   </header>
 
   <main>
@@ -29,7 +31,10 @@
           short-, medium-, and long-horizon windows.
         </p>
       </div>
-      <button id="refreshButton">Refresh data</button>
+      <div class="snapshot-meta">
+        <div class="label">SNAPSHOT</div>
+        <div id="snapshotTime">Loading…</div>
+      </div>
     </section>
 
     <section class="summary-grid">
@@ -86,6 +91,40 @@
       <div class="chart-container">
         <canvas id="geometryChart"></canvas>
       </div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">Degeneracy Details</div>
+      <div class="detail-controls">
+        <label>
+          Window
+          <select id="detailWindow">
+            <option value="63">63 day</option>
+            <option value="126" selected>126 day</option>
+            <option value="252">252 day</option>
+          </select>
+        </label>
+      </div>
+      <div id="degeneracyDetails"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">Historical Explorer</div>
+      <div class="explorer-controls">
+        <label>
+          Date
+          <select id="historyDate"></select>
+        </label>
+      </div>
+      <div id="historicalExplorer"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-title">Daily Status History</div>
+      <div class="chart-container status-chart">
+        <canvas id="statusChart"></canvas>
+      </div>
+      <div id="statusTable"></div>
     </section>
 
     <section class="panel research-note">

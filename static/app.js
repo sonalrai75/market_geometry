@@ -1,20 +1,45 @@
 let model = null;
-let chart = null;
+let geometryChart = null;
+let statusChart = null;
 
 const n = (x, digits=2) =>
   x === null || x === undefined || Number.isNaN(Number(x))
     ? "—"
     : Number(x).toFixed(digits);
 
-const percentile = x =>
+const pct = x =>
   x === null || x === undefined || Number.isNaN(Number(x))
     ? "—"
     : `${Number(x).toFixed(1)}%`;
 
 function statusClass(status) {
+  if (!status) return "";
   if (status.includes("DEGENERACY")) return "status-degeneracy";
   if (status.includes("SHIFT")) return "status-shift";
   return "status-normal";
+}
+
+function statusValue(status) {
+  return {
+    "NORMAL": 0,
+    "GEOMETRY SHIFT": 1,
+    "APPROACHING DEGENERACY": 2,
+    "HIGH DEGENERACY": 3
+  }[status] ?? null;
+}
+
+function contributionBars(items) {
+  return items.map(item => `
+    <div class="bar-row">
+      <div class="bar-label">
+        <span>${item.name}</span>
+        <strong>${(item.value * 100).toFixed(1)}%</strong>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" style="width:${Math.min(100, item.value * 100)}%"></div>
+      </div>
+    </div>
+  `).join("");
 }
 
 function renderDashboard(data) {
@@ -26,6 +51,11 @@ function renderDashboard(data) {
 
   document.getElementById("asOf").textContent = `As of ${data.as_of}`;
   document.getElementById("confirmation").textContent = data.cross_window_confirmation;
+
+  const generated = data.snapshot_generated_at
+    ? new Date(data.snapshot_generated_at).toLocaleString()
+    : "—";
+  document.getElementById("snapshotTime").textContent = generated;
 
   const top = data.aggregate_contributions[0];
   document.getElementById("dominantDriver").textContent = top?.name ?? "—";
@@ -43,24 +73,14 @@ function renderDashboard(data) {
         <div class="kpi"><span>Sigma ratio</span><strong>${n(w.sigma_ratio,3)}</strong></div>
         <div class="kpi"><span>Condition #</span><strong>${n(w.condition_number,1)}</strong></div>
         <div class="kpi"><span>Rotation</span><strong>${n(w.rotation_deg,1)}°</strong></div>
-        <div class="kpi"><span>Condition pctile</span><strong>${percentile(w.condition_percentile)}</strong></div>
-        <div class="kpi"><span>Rotation pctile</span><strong>${percentile(w.rotation_percentile)}</strong></div>
+        <div class="kpi"><span>Condition pctile</span><strong>${pct(w.condition_percentile)}</strong></div>
+        <div class="kpi"><span>Rotation pctile</span><strong>${pct(w.rotation_percentile)}</strong></div>
       </div>
     </article>
   `).join("");
 
   document.getElementById("contributionBars").innerHTML =
-    data.aggregate_contributions.map(item => `
-      <div class="bar-row">
-        <div class="bar-label">
-          <span>${item.name}</span>
-          <strong>${(item.value * 100).toFixed(1)}%</strong>
-        </div>
-        <div class="bar-track">
-          <div class="bar-fill" style="width:${Math.min(100, item.value * 100)}%"></div>
-        </div>
-      </div>
-    `).join("");
+    contributionBars(data.aggregate_contributions);
 
   document.getElementById("interpretation").textContent = data.interpretation;
   document.getElementById("researchNote").textContent = data.research_note;
@@ -73,17 +93,31 @@ function renderDashboard(data) {
     `<ul>${(reasons.length ? reasons : ["All monitored time scales remain within their recent historical ranges."])
       .map(reason => `<li>${reason}</li>`).join("")}</ul>`;
 
-  drawChart(Number(document.getElementById("windowSelect").value));
+  const dateSelect = document.getElementById("historyDate");
+  const dates = [...new Set(
+    data.status_history.map(row => row.date)
+  )].reverse();
+
+  dateSelect.innerHTML = dates.map(date =>
+    `<option value="${date}">${date}</option>`
+  ).join("");
+
+  drawGeometryChart(Number(document.getElementById("windowSelect").value));
+  renderDegeneracyDetails(Number(document.getElementById("detailWindow").value));
+  renderHistoricalExplorer(dateSelect.value);
+  drawStatusChart();
+  renderStatusTable();
 }
 
-function drawChart(windowSize) {
+function drawGeometryChart(windowSize) {
   if (!model) return;
+
   const item = model.windows.find(w => w.window === windowSize);
   if (!item) return;
 
-  if (chart) chart.destroy();
+  if (geometryChart) geometryChart.destroy();
 
-  chart = new Chart(document.getElementById("geometryChart"), {
+  geometryChart = new Chart(document.getElementById("geometryChart"), {
     type: "line",
     data: {
       labels: item.history.map(p => p.date),
@@ -129,13 +163,197 @@ function drawChart(windowSize) {
   });
 }
 
-async function load(refresh=false) {
-  const button = document.getElementById("refreshButton");
-  button.disabled = true;
-  button.textContent = refresh ? "Refreshing…" : "Loading…";
+function renderDegeneracyDetails(windowSize) {
+  if (!model) return;
 
+  const w = model.windows.find(item => item.window === windowSize);
+  if (!w) return;
+
+  const reasons = w.reasons.map(r => `<li>${r}</li>`).join("");
+  const topDrivers = w.contributions.slice(0, 5);
+
+  document.getElementById("degeneracyDetails").innerHTML = `
+    <div class="detail-grid">
+      <div class="detail-card">
+        <div class="label">STATUS</div>
+        <div class="detail-status ${statusClass(w.status)}">${w.status}</div>
+        <div class="muted">Degeneracy score: ${w.degeneracy_score}</div>
+      </div>
+
+      <div class="detail-card">
+        <div class="label">SINGULAR CONTRACTION</div>
+        <div class="detail-number">${n(w.sigma_ratio, 4)}</div>
+        <div class="muted">Trailing percentile: ${pct(w.sigma_ratio_percentile)}</div>
+      </div>
+
+      <div class="detail-card">
+        <div class="label">CONDITIONING</div>
+        <div class="detail-number">${n(w.condition_number, 2)}</div>
+        <div class="muted">Trailing percentile: ${pct(w.condition_percentile)}</div>
+      </div>
+
+      <div class="detail-card">
+        <div class="label">WEAK-DIRECTION ROTATION</div>
+        <div class="detail-number">${n(w.rotation_deg, 1)}°</div>
+        <div class="muted">Trailing percentile: ${pct(w.rotation_percentile)}</div>
+      </div>
+    </div>
+
+    <div class="detail-split">
+      <div>
+        <h3>Why this status?</h3>
+        <ul class="reason-list">${reasons}</ul>
+      </div>
+      <div>
+        <h3>Current weak-direction drivers</h3>
+        ${contributionBars(topDrivers)}
+      </div>
+    </div>
+  `;
+}
+
+function renderHistoricalExplorer(date) {
+  if (!model || !date) return;
+
+  const overall = model.status_history.find(row => row.date === date);
+
+  const rows = model.windows.map(w => {
+    const d = w.history_detail.find(row => row.date === date);
+    return d ? { window: w.window, ...d } : null;
+  }).filter(Boolean);
+
+  document.getElementById("historicalExplorer").innerHTML = `
+    <div class="history-summary">
+      <div>
+        <div class="label">OVERALL STATE</div>
+        <div class="detail-status ${statusClass(overall?.overall_status)}">
+          ${overall?.overall_status ?? "—"}
+        </div>
+      </div>
+      <div>
+        <div class="label">CONFIRMING WINDOWS</div>
+        <div class="detail-number">${overall?.confirming_windows ?? "—"} / 3</div>
+      </div>
+    </div>
+
+    <div class="history-window-grid">
+      ${rows.map(row => `
+        <article class="history-card">
+          <div class="window-head">
+            <strong>${row.window} day</strong>
+            <span class="badge ${statusClass(row.status)}">${row.status}</span>
+          </div>
+          <div class="history-metrics">
+            <span>Sigma ratio <strong>${n(row.sigma_ratio, 3)}</strong></span>
+            <span>Condition <strong>${n(row.condition_number, 1)}</strong></span>
+            <span>Rotation <strong>${n(row.rotation_deg, 1)}°</strong></span>
+            <span>Score <strong>${row.degeneracy_score}</strong></span>
+          </div>
+          <div class="top-drivers">
+            ${row.contributions.slice(0,3).map(c =>
+              `<span>${c.name}: ${(c.value*100).toFixed(1)}%</span>`
+            ).join("")}
+          </div>
+        </article>
+      `).join("")}
+    </div>
+  `;
+}
+
+function drawStatusChart() {
+  if (!model) return;
+
+  const history = model.status_history;
+  if (statusChart) statusChart.destroy();
+
+  statusChart = new Chart(document.getElementById("statusChart"), {
+    type: "line",
+    data: {
+      labels: history.map(row => row.date),
+      datasets: [{
+        label: "Overall geometry state",
+        data: history.map(row => statusValue(row.overall_status)),
+        stepped: true,
+        tension: 0
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      elements: {
+        point: { radius: 0 },
+        line: { borderWidth: 1.8 }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: context => {
+              const map = [
+                "NORMAL",
+                "GEOMETRY SHIFT",
+                "APPROACHING DEGENERACY",
+                "HIGH DEGENERACY"
+              ];
+              return map[context.raw] ?? "—";
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: 0,
+          max: 3,
+          ticks: {
+            stepSize: 1,
+            callback: value => ({
+              0: "NORMAL",
+              1: "SHIFT",
+              2: "APPROACHING",
+              3: "HIGH"
+            })[value] ?? ""
+          }
+        }
+      }
+    }
+  });
+}
+
+function renderStatusTable() {
+  const rows = model.status_history.slice(-15).reverse();
+
+  document.getElementById("statusTable").innerHTML = `
+    <table class="status-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Overall</th>
+          <th>63D</th>
+          <th>126D</th>
+          <th>252D</th>
+          <th>Confirming</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows.map(row => `
+          <tr>
+            <td>${row.date}</td>
+            <td class="${statusClass(row.overall_status)}">${row.overall_status}</td>
+            <td>${row.window_statuses["63"]}</td>
+            <td>${row.window_statuses["126"]}</td>
+            <td>${row.window_statuses["252"]}</td>
+            <td>${row.confirming_windows}/3</td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+async function load() {
   try {
-    const response = await fetch(refresh ? "/api/refresh" : "/api/dashboard");
+    const response = await fetch("/api/dashboard");
+
     if (!response.ok) {
       let message = `HTTP ${response.status}`;
       try {
@@ -144,20 +362,27 @@ async function load(refresh=false) {
       } catch {}
       throw new Error(message);
     }
+
     renderDashboard(await response.json());
   } catch (error) {
     document.getElementById("interpretation").textContent =
       `Unable to load market geometry: ${error.message}`;
-  } finally {
-    button.disabled = false;
-    button.textContent = "Refresh data";
   }
 }
 
-document.getElementById("refreshButton").addEventListener("click", () => load(true));
 document.getElementById("windowSelect").addEventListener(
   "change",
-  event => drawChart(Number(event.target.value))
+  event => drawGeometryChart(Number(event.target.value))
 );
 
-load(false);
+document.getElementById("detailWindow").addEventListener(
+  "change",
+  event => renderDegeneracyDetails(Number(event.target.value))
+);
+
+document.getElementById("historyDate").addEventListener(
+  "change",
+  event => renderHistoricalExplorer(event.target.value)
+);
+
+load();
