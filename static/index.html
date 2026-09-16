@@ -127,6 +127,22 @@
       <div id="statusTable"></div>
     </section>
 
+    <!-- Add this section before the Research boundary panel in static/index.html -->
+    <section class="panel">
+      <div class="panel-title chart-title">
+        <span>Daily Historical Table</span>
+        <div class="table-controls">
+          <select id="tableWindow">
+            <option value="63">63 day</option>
+            <option value="126" selected>126 day</option>
+            <option value="252">252 day</option>
+          </select>
+          <button id="downloadDailyCsv" type="button">Download CSV</button>
+        </div>
+      </div>
+      <div id="dailyHistoricalTable"></div>
+    </section>
+
     <section class="panel research-note">
       <div class="panel-title">Research boundary</div>
       <p id="researchNote"></p>

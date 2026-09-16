@@ -107,6 +107,7 @@ function renderDashboard(data) {
   renderHistoricalExplorer(dateSelect.value);
   drawStatusChart();
   renderStatusTable();
+  renderDailyHistoricalTable(Number(document.getElementById("tableWindow").value));
 }
 
 function drawGeometryChart(windowSize) {
@@ -386,3 +387,94 @@ document.getElementById("historyDate").addEventListener(
 );
 
 load();
+
+
+// Daily historical table support.
+// Append this block to static/app.js after the existing code.
+
+function renderDailyHistoricalTable(windowSize) {
+  if (!model) return;
+
+  const item = model.windows.find(w => w.window === windowSize);
+  if (!item || !item.daily_table) return;
+
+  const rows = [...item.daily_table].reverse();
+  const body = rows.map(r => `
+    <tr>
+      <td>${r.date}</td>
+      <td class="${statusClass(r.status)}">${r.status}</td>
+      <td>${r.degeneracy_score}</td>
+      <td>${n(r.sigma_min, 4)}</td>
+      <td>${n(r.condition_number, 2)}</td>
+      <td>${n(r.weak_rotation_deg, 1)}°</td>
+      <td>${n(r.tangent_plane_rotation_deg, 1)}°</td>
+      <td>${r.dominant_driver}</td>
+      <td>${n(r.driver_usd_pct, 1)}%</td>
+      <td>${n(r.driver_rates_pct, 1)}%</td>
+      <td>${n(r.driver_credit_pct, 1)}%</td>
+      <td>${n(r.driver_energy_pct, 1)}%</td>
+      <td>${n(r.driver_equities_pct, 1)}%</td>
+      <td>${n(r.driver_volatility_pct, 1)}%</td>
+      <td>${n(r.spy_close, 2)}</td>
+    </tr>
+  `).join("");
+
+  document.getElementById("dailyHistoricalTable").innerHTML = `
+    <div class="table-scroll">
+      <table class="status-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Degeneracy score</th>
+            <th>σmin</th>
+            <th>Condition #</th>
+            <th>Weak rotation</th>
+            <th>Tangent-plane rotation</th>
+            <th>Dominant driver</th>
+            <th>USD %</th>
+            <th>Rates %</th>
+            <th>Credit %</th>
+            <th>Energy %</th>
+            <th>Equities %</th>
+            <th>Volatility %</th>
+            <th>SPY close</th>
+          </tr>
+        </thead>
+        <tbody>${body}</tbody>
+      </table>
+    </div>
+  `;
+
+  document.getElementById("downloadDailyCsv").onclick = () => {
+    const columns = [
+      "date","status","degeneracy_score","sigma_min","condition_number",
+      "weak_rotation_deg","tangent_plane_rotation_deg","dominant_driver",
+      "driver_usd_pct","driver_rates_pct","driver_credit_pct","driver_energy_pct",
+      "driver_equities_pct","driver_volatility_pct","spy_close"
+    ];
+
+    const csv = [
+      columns.join(","),
+      ...item.daily_table.map(row =>
+        columns.map(col => {
+          const value = row[col] ?? "";
+          return `"${String(value).replaceAll('"','""')}"`;
+        }).join(",")
+      )
+    ].join("\n");
+
+    const blob = new Blob([csv], {type:"text/csv;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `market_geometry_daily_${windowSize}d.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+}
+
+document.getElementById("tableWindow").addEventListener(
+  "change",
+  event => renderDailyHistoricalTable(Number(event.target.value))
+);
