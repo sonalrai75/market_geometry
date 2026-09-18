@@ -1,21 +1,21 @@
 {
-  "as_of": "2026-09-16",
+  "as_of": "2026-09-17",
   "overall_status": "NORMAL",
   "cross_window_confirmation": "0 / 3",
   "windows": [
     {
       "window": 63,
-      "date": "2026-09-16",
-      "spy_close": 754.0499877929688,
-      "sigma_min": 0.2463754335805297,
-      "sigma_max": 1.7262433437859628,
-      "sigma_ratio": 0.14272346622938106,
-      "condition_number": 7.00655628971923,
-      "rotation_deg": 10.937347134390834,
-      "tangent_plane_rotation_deg": 11.39702696017584,
-      "sigma_ratio_percentile": 71.42857142857143,
-      "condition_percentile": 28.57142857142857,
-      "rotation_percentile": 56.34920634920635,
+      "date": "2026-09-17",
+      "spy_close": null,
+      "sigma_min": 0.25619508736659224,
+      "sigma_max": 1.6564658960055845,
+      "sigma_ratio": 0.15466366556919958,
+      "condition_number": 6.4656426984305515,
+      "rotation_deg": 4.093584053353679,
+      "tangent_plane_rotation_deg": 5.698734406240519,
+      "sigma_ratio_percentile": 75.39682539682539,
+      "condition_percentile": 24.6031746031746,
+      "rotation_percentile": 9.920634920634921,
       "sigma_decline_fraction_10d": 0.2,
       "condition_rise_fraction_10d": 0.2,
       "status": "NORMAL",
@@ -25,82 +25,74 @@
       ],
       "contributions": [
         {
-          "key": "CreditSpread_BAA10Y",
-          "name": "Baa Credit Spread",
-          "value": 0.2667526802032242
-        },
-        {
           "key": "Curve10Y2Y",
           "name": "10Y\u20132Y Curve",
-          "value": 0.22588471492572296
+          "value": 0.2520134088634511
+        },
+        {
+          "key": "CreditSpread_BAA10Y",
+          "name": "Baa Credit Spread",
+          "value": 0.24937093987457642
         },
         {
           "key": "BroadUSD",
           "name": "Broad USD",
-          "value": 0.21877714415506033
+          "value": 0.2021671312516647
         },
         {
           "key": "WTI",
           "name": "WTI Oil",
-          "value": 0.14390068104099635
+          "value": 0.1384133519005475
         },
         {
           "key": "RSP_SPY_Ratio",
           "name": "Breadth (RSP/SPY)",
-          "value": 0.09185806441690691
+          "value": 0.11214998505609793
         },
         {
           "key": "VIX",
           "name": "VIX",
-          "value": 0.04684724120559865
+          "value": 0.03426779271816223
         },
         {
           "key": "SPY_Volume_Z20",
           "name": "SPY Volume",
-          "value": 0.00531195491131707
+          "value": 0.007358442183646655
         },
         {
           "key": "Treasury10Y",
           "name": "10Y Treasury",
-          "value": 0.0006675191411735395
+          "value": 0.00425894815185351
         }
       ],
       "driver_groups": [
         {
-          "name": "Credit",
-          "value": 0.2667526802032242
+          "name": "Rates",
+          "value": 0.2562723570153046
         },
         {
-          "name": "Rates",
-          "value": 0.2265522340668965
+          "name": "Credit",
+          "value": 0.24937093987457642
         },
         {
           "name": "USD",
-          "value": 0.21877714415506033
+          "value": 0.2021671312516647
         },
         {
           "name": "Energy",
-          "value": 0.14390068104099635
+          "value": 0.1384133519005475
         },
         {
           "name": "Equities",
-          "value": 0.09717001932822399
+          "value": 0.11950842723974459
         },
         {
           "name": "Volatility",
-          "value": 0.04684724120559865
+          "value": 0.03426779271816223
         }
       ],
-      "dominant_driver": "Credit",
+      "dominant_driver": "Rates",
       "history": [
-        {
-          "date": "2025-09-16",
-          "sigma_ratio": 0.12167670913759121,
-          "condition": 8.21849972018233,
-          "rotation": 11.60024928631988,
-          "tangent_rotation": 18.201728163200492,
-          "status": "NORMAL"
-        },
         {
           "date": "2025-09-17",
           "sigma_ratio": 0.13181476336446019,
@@ -2108,98 +2100,17 @@
           "rotation": 10.937347134390834,
           "tangent_rotation": 11.39702696017584,
           "status": "NORMAL"
+        },
+        {
+          "date": "2026-09-17",
+          "sigma_ratio": 0.15466366556919958,
+          "condition": 6.4656426984305515,
+          "rotation": 4.093584053353679,
+          "tangent_rotation": 5.698734406240519,
+          "status": "NORMAL"
         }
       ],
       "history_detail": [
-        {
-          "date": "2025-09-16",
-          "spy_close": 652.7671509,
-          "sigma_min": 0.20297521410561079,
-          "sigma_max": 1.6681517403309105,
-          "sigma_ratio": 0.12167670913759121,
-          "condition_number": 8.21849972018233,
-          "rotation_deg": 11.60024928631988,
-          "tangent_plane_rotation_deg": 18.201728163200492,
-          "sigma_ratio_percentile": 60.71428571428571,
-          "condition_percentile": 39.285714285714285,
-          "rotation_percentile": 68.25396825396825,
-          "sigma_decline_fraction_10d": 0.5,
-          "condition_rise_fraction_10d": 0.4,
-          "status": "NORMAL",
-          "degeneracy_score": 0,
-          "reasons": [
-            "geometry remains within its recent historical range"
-          ],
-          "contributions": [
-            {
-              "key": "Treasury10Y",
-              "name": "10Y Treasury",
-              "value": 0.27540034234523436
-            },
-            {
-              "key": "SPY_Volume_Z20",
-              "name": "SPY Volume",
-              "value": 0.27448691215517207
-            },
-            {
-              "key": "RSP_SPY_Ratio",
-              "name": "Breadth (RSP/SPY)",
-              "value": 0.27380275372925816
-            },
-            {
-              "key": "WTI",
-              "name": "WTI Oil",
-              "value": 0.06737648827800259
-            },
-            {
-              "key": "CreditSpread_BAA10Y",
-              "name": "Baa Credit Spread",
-              "value": 0.05325670810934294
-            },
-            {
-              "key": "Curve10Y2Y",
-              "name": "10Y\u20132Y Curve",
-              "value": 0.0408944470390866
-            },
-            {
-              "key": "VIX",
-              "name": "VIX",
-              "value": 0.008767328418215961
-            },
-            {
-              "key": "BroadUSD",
-              "name": "Broad USD",
-              "value": 0.0060150199256873375
-            }
-          ],
-          "driver_groups": [
-            {
-              "name": "Equities",
-              "value": 0.5482896658844303
-            },
-            {
-              "name": "Rates",
-              "value": 0.316294789384321
-            },
-            {
-              "name": "Energy",
-              "value": 0.06737648827800259
-            },
-            {
-              "name": "Credit",
-              "value": 0.05325670810934294
-            },
-            {
-              "name": "Volatility",
-              "value": 0.008767328418215961
-            },
-            {
-              "name": "USD",
-              "value": 0.0060150199256873375
-            }
-          ],
-          "dominant_driver": "Equities"
-        },
         {
           "date": "2025-09-17",
           "spy_close": 651.9561157,
@@ -24665,6 +24576,95 @@
             }
           ],
           "dominant_driver": "Credit"
+        },
+        {
+          "date": "2026-09-17",
+          "spy_close": null,
+          "sigma_min": 0.25619508736659224,
+          "sigma_max": 1.6564658960055845,
+          "sigma_ratio": 0.15466366556919958,
+          "condition_number": 6.4656426984305515,
+          "rotation_deg": 4.093584053353679,
+          "tangent_plane_rotation_deg": 5.698734406240519,
+          "sigma_ratio_percentile": 75.39682539682539,
+          "condition_percentile": 24.6031746031746,
+          "rotation_percentile": 9.920634920634921,
+          "sigma_decline_fraction_10d": 0.2,
+          "condition_rise_fraction_10d": 0.2,
+          "status": "NORMAL",
+          "degeneracy_score": 0,
+          "reasons": [
+            "geometry remains within its recent historical range"
+          ],
+          "contributions": [
+            {
+              "key": "Curve10Y2Y",
+              "name": "10Y\u20132Y Curve",
+              "value": 0.2520134088634511
+            },
+            {
+              "key": "CreditSpread_BAA10Y",
+              "name": "Baa Credit Spread",
+              "value": 0.24937093987457642
+            },
+            {
+              "key": "BroadUSD",
+              "name": "Broad USD",
+              "value": 0.2021671312516647
+            },
+            {
+              "key": "WTI",
+              "name": "WTI Oil",
+              "value": 0.1384133519005475
+            },
+            {
+              "key": "RSP_SPY_Ratio",
+              "name": "Breadth (RSP/SPY)",
+              "value": 0.11214998505609793
+            },
+            {
+              "key": "VIX",
+              "name": "VIX",
+              "value": 0.03426779271816223
+            },
+            {
+              "key": "SPY_Volume_Z20",
+              "name": "SPY Volume",
+              "value": 0.007358442183646655
+            },
+            {
+              "key": "Treasury10Y",
+              "name": "10Y Treasury",
+              "value": 0.00425894815185351
+            }
+          ],
+          "driver_groups": [
+            {
+              "name": "Rates",
+              "value": 0.2562723570153046
+            },
+            {
+              "name": "Credit",
+              "value": 0.24937093987457642
+            },
+            {
+              "name": "USD",
+              "value": 0.2021671312516647
+            },
+            {
+              "name": "Energy",
+              "value": 0.1384133519005475
+            },
+            {
+              "name": "Equities",
+              "value": 0.11950842723974459
+            },
+            {
+              "name": "Volatility",
+              "value": 0.03426779271816223
+            }
+          ],
+          "dominant_driver": "Rates"
         }
       ],
       "daily_table": [
@@ -45101,24 +45101,41 @@
           "driver_equities_pct": 9.717001932822399,
           "driver_volatility_pct": 4.684724120559864,
           "spy_close": 754.0499877929688
+        },
+        {
+          "date": "2026-09-17",
+          "status": "NORMAL",
+          "degeneracy_score": 0,
+          "sigma_min": 0.25619508736659224,
+          "condition_number": 6.4656426984305515,
+          "weak_rotation_deg": 4.093584053353679,
+          "tangent_plane_rotation_deg": 5.698734406240519,
+          "dominant_driver": "Rates",
+          "driver_usd_pct": 20.216713125166468,
+          "driver_rates_pct": 25.62723570153046,
+          "driver_credit_pct": 24.937093987457644,
+          "driver_energy_pct": 13.84133519005475,
+          "driver_equities_pct": 11.950842723974459,
+          "driver_volatility_pct": 3.426779271816223,
+          "spy_close": null
         }
       ]
     },
     {
       "window": 126,
-      "date": "2026-09-16",
-      "spy_close": 754.0499877929688,
-      "sigma_min": 0.18446450799804154,
-      "sigma_max": 2.6815561939022166,
-      "sigma_ratio": 0.06879009599631312,
-      "condition_number": 14.536976370168112,
-      "rotation_deg": 10.531923660757622,
-      "tangent_plane_rotation_deg": 5.235767916171104,
-      "sigma_ratio_percentile": 53.57142857142857,
-      "condition_percentile": 46.42857142857143,
-      "rotation_percentile": 75.39682539682539,
-      "sigma_decline_fraction_10d": 0.5,
-      "condition_rise_fraction_10d": 0.5,
+      "date": "2026-09-17",
+      "spy_close": null,
+      "sigma_min": 0.17537142956420787,
+      "sigma_max": 2.606051869671597,
+      "sigma_ratio": 0.06729391368035488,
+      "condition_number": 14.860184900970179,
+      "rotation_deg": 4.20460160202548,
+      "tangent_plane_rotation_deg": 4.446541076356292,
+      "sigma_ratio_percentile": 51.19047619047619,
+      "condition_percentile": 48.80952380952381,
+      "rotation_percentile": 27.77777777777778,
+      "sigma_decline_fraction_10d": 0.6,
+      "condition_rise_fraction_10d": 0.6,
       "status": "NORMAL",
       "degeneracy_score": 0,
       "reasons": [
@@ -45128,80 +45145,72 @@
         {
           "key": "BroadUSD",
           "name": "Broad USD",
-          "value": 0.4305633618672336
+          "value": 0.4621081596456171
         },
         {
           "key": "Curve10Y2Y",
           "name": "10Y\u20132Y Curve",
-          "value": 0.286125283881575
+          "value": 0.2488396198416086
         },
         {
           "key": "SPY_Volume_Z20",
           "name": "SPY Volume",
-          "value": 0.09792918512272934
+          "value": 0.12199378367007058
         },
         {
           "key": "RSP_SPY_Ratio",
           "name": "Breadth (RSP/SPY)",
-          "value": 0.08875598835436359
+          "value": 0.08540525545823802
         },
         {
           "key": "CreditSpread_BAA10Y",
           "name": "Baa Credit Spread",
-          "value": 0.05213903018947373
+          "value": 0.051325523731481665
         },
         {
           "key": "WTI",
           "name": "WTI Oil",
-          "value": 0.03335596311480189
+          "value": 0.020122520416911115
         },
         {
           "key": "VIX",
           "name": "VIX",
-          "value": 0.009687807280929913
+          "value": 0.0071204989503481685
         },
         {
           "key": "Treasury10Y",
           "name": "10Y Treasury",
-          "value": 0.0014433801888928993
+          "value": 0.003084638285724928
         }
       ],
       "driver_groups": [
         {
           "name": "USD",
-          "value": 0.4305633618672336
+          "value": 0.4621081596456171
         },
         {
           "name": "Rates",
-          "value": 0.2875686640704679
+          "value": 0.25192425812733354
         },
         {
           "name": "Equities",
-          "value": 0.18668517347709293
+          "value": 0.2073990391283086
         },
         {
           "name": "Credit",
-          "value": 0.05213903018947373
+          "value": 0.051325523731481665
         },
         {
           "name": "Energy",
-          "value": 0.03335596311480189
+          "value": 0.020122520416911115
         },
         {
           "name": "Volatility",
-          "value": 0.009687807280929913
+          "value": 0.0071204989503481685
         }
       ],
       "dominant_driver": "USD",
       "history": [
-        {
-          "date": "2025-09-16",
-          "sigma_ratio": 0.06475971126652134,
-          "condition": 15.44169948325522,
-          "rotation": 2.0622112190937325,
-          "tangent_rotation": 3.501273724528899,
-          "status": "NORMAL"
-        },
         {
           "date": "2025-09-17",
           "sigma_ratio": 0.06562917571556713,
@@ -47209,98 +47218,17 @@
           "rotation": 10.531923660757622,
           "tangent_rotation": 5.235767916171104,
           "status": "NORMAL"
+        },
+        {
+          "date": "2026-09-17",
+          "sigma_ratio": 0.06729391368035488,
+          "condition": 14.860184900970179,
+          "rotation": 4.20460160202548,
+          "tangent_rotation": 4.446541076356292,
+          "status": "NORMAL"
         }
       ],
       "history_detail": [
-        {
-          "date": "2025-09-16",
-          "spy_close": 652.7671509,
-          "sigma_min": 0.11947297725529485,
-          "sigma_max": 1.8448658111460492,
-          "sigma_ratio": 0.06475971126652134,
-          "condition_number": 15.44169948325522,
-          "rotation_deg": 2.0622112190937325,
-          "tangent_plane_rotation_deg": 3.501273724528899,
-          "sigma_ratio_percentile": 31.746031746031743,
-          "condition_percentile": 68.25396825396825,
-          "rotation_percentile": 16.26984126984127,
-          "sigma_decline_fraction_10d": 0.4,
-          "condition_rise_fraction_10d": 0.6,
-          "status": "NORMAL",
-          "degeneracy_score": 0,
-          "reasons": [
-            "geometry remains within its recent historical range"
-          ],
-          "contributions": [
-            {
-              "key": "RSP_SPY_Ratio",
-              "name": "Breadth (RSP/SPY)",
-              "value": 0.27824684892325835
-            },
-            {
-              "key": "WTI",
-              "name": "WTI Oil",
-              "value": 0.22742805243907102
-            },
-            {
-              "key": "SPY_Volume_Z20",
-              "name": "SPY Volume",
-              "value": 0.2249765219780875
-            },
-            {
-              "key": "Treasury10Y",
-              "name": "10Y Treasury",
-              "value": 0.1352281608600281
-            },
-            {
-              "key": "Curve10Y2Y",
-              "name": "10Y\u20132Y Curve",
-              "value": 0.06943309059321884
-            },
-            {
-              "key": "VIX",
-              "name": "VIX",
-              "value": 0.06276935706999842
-            },
-            {
-              "key": "CreditSpread_BAA10Y",
-              "name": "Baa Credit Spread",
-              "value": 0.0013541283338692092
-            },
-            {
-              "key": "BroadUSD",
-              "name": "Broad USD",
-              "value": 0.0005638398024686058
-            }
-          ],
-          "driver_groups": [
-            {
-              "name": "Equities",
-              "value": 0.5032233709013458
-            },
-            {
-              "name": "Energy",
-              "value": 0.22742805243907102
-            },
-            {
-              "name": "Rates",
-              "value": 0.20466125145324693
-            },
-            {
-              "name": "Volatility",
-              "value": 0.06276935706999842
-            },
-            {
-              "name": "Credit",
-              "value": 0.0013541283338692092
-            },
-            {
-              "name": "USD",
-              "value": 0.0005638398024686058
-            }
-          ],
-          "dominant_driver": "Equities"
-        },
         {
           "date": "2025-09-17",
           "spy_close": 651.9561157,
@@ -69827,6 +69755,95 @@
             }
           ],
           "dominant_driver": "USD"
+        },
+        {
+          "date": "2026-09-17",
+          "spy_close": null,
+          "sigma_min": 0.17537142956420787,
+          "sigma_max": 2.606051869671597,
+          "sigma_ratio": 0.06729391368035488,
+          "condition_number": 14.860184900970179,
+          "rotation_deg": 4.20460160202548,
+          "tangent_plane_rotation_deg": 4.446541076356292,
+          "sigma_ratio_percentile": 51.19047619047619,
+          "condition_percentile": 48.80952380952381,
+          "rotation_percentile": 27.77777777777778,
+          "sigma_decline_fraction_10d": 0.6,
+          "condition_rise_fraction_10d": 0.6,
+          "status": "NORMAL",
+          "degeneracy_score": 0,
+          "reasons": [
+            "geometry remains within its recent historical range"
+          ],
+          "contributions": [
+            {
+              "key": "BroadUSD",
+              "name": "Broad USD",
+              "value": 0.4621081596456171
+            },
+            {
+              "key": "Curve10Y2Y",
+              "name": "10Y\u20132Y Curve",
+              "value": 0.2488396198416086
+            },
+            {
+              "key": "SPY_Volume_Z20",
+              "name": "SPY Volume",
+              "value": 0.12199378367007058
+            },
+            {
+              "key": "RSP_SPY_Ratio",
+              "name": "Breadth (RSP/SPY)",
+              "value": 0.08540525545823802
+            },
+            {
+              "key": "CreditSpread_BAA10Y",
+              "name": "Baa Credit Spread",
+              "value": 0.051325523731481665
+            },
+            {
+              "key": "WTI",
+              "name": "WTI Oil",
+              "value": 0.020122520416911115
+            },
+            {
+              "key": "VIX",
+              "name": "VIX",
+              "value": 0.0071204989503481685
+            },
+            {
+              "key": "Treasury10Y",
+              "name": "10Y Treasury",
+              "value": 0.003084638285724928
+            }
+          ],
+          "driver_groups": [
+            {
+              "name": "USD",
+              "value": 0.4621081596456171
+            },
+            {
+              "name": "Rates",
+              "value": 0.25192425812733354
+            },
+            {
+              "name": "Equities",
+              "value": 0.2073990391283086
+            },
+            {
+              "name": "Credit",
+              "value": 0.051325523731481665
+            },
+            {
+              "name": "Energy",
+              "value": 0.020122520416911115
+            },
+            {
+              "name": "Volatility",
+              "value": 0.0071204989503481685
+            }
+          ],
+          "dominant_driver": "USD"
         }
       ],
       "daily_table": [
@@ -89311,24 +89328,41 @@
           "driver_equities_pct": 18.668517347709294,
           "driver_volatility_pct": 0.9687807280929913,
           "spy_close": 754.0499877929688
+        },
+        {
+          "date": "2026-09-17",
+          "status": "NORMAL",
+          "degeneracy_score": 0,
+          "sigma_min": 0.17537142956420787,
+          "condition_number": 14.860184900970179,
+          "weak_rotation_deg": 4.20460160202548,
+          "tangent_plane_rotation_deg": 4.446541076356292,
+          "dominant_driver": "USD",
+          "driver_usd_pct": 46.21081596456171,
+          "driver_rates_pct": 25.192425812733354,
+          "driver_credit_pct": 5.132552373148166,
+          "driver_energy_pct": 2.0122520416911116,
+          "driver_equities_pct": 20.739903912830858,
+          "driver_volatility_pct": 0.7120498950348169,
+          "spy_close": null
         }
       ]
     },
     {
       "window": 252,
-      "date": "2026-09-16",
-      "spy_close": 754.0499877929688,
-      "sigma_min": 0.11688019064398247,
-      "sigma_max": 1.4765396921409615,
-      "sigma_ratio": 0.07915817723430642,
-      "condition_number": 12.632933639187048,
-      "rotation_deg": 1.598690070114936,
-      "tangent_plane_rotation_deg": 2.482816536705384,
-      "sigma_ratio_percentile": 56.74603174603175,
-      "condition_percentile": 43.25396825396825,
+      "date": "2026-09-17",
+      "spy_close": null,
+      "sigma_min": 0.11810078571807796,
+      "sigma_max": 1.4647396582162662,
+      "sigma_ratio": 0.0806291992270483,
+      "condition_number": 12.402454812729117,
+      "rotation_deg": 1.5925846034244728,
+      "tangent_plane_rotation_deg": 2.024045123260484,
+      "sigma_ratio_percentile": 58.333333333333336,
+      "condition_percentile": 41.66666666666667,
       "rotation_percentile": 18.253968253968253,
-      "sigma_decline_fraction_10d": 0.3,
-      "condition_rise_fraction_10d": 0.5,
+      "sigma_decline_fraction_10d": 0.2,
+      "condition_rise_fraction_10d": 0.4,
       "status": "NORMAL",
       "degeneracy_score": 0,
       "reasons": [
@@ -89338,80 +89372,72 @@
         {
           "key": "SPY_Volume_Z20",
           "name": "SPY Volume",
-          "value": 0.3603680764738915
+          "value": 0.37329268192001513
         },
         {
           "key": "CreditSpread_BAA10Y",
           "name": "Baa Credit Spread",
-          "value": 0.2189219914956521
+          "value": 0.22868555500312693
         },
         {
           "key": "BroadUSD",
           "name": "Broad USD",
-          "value": 0.21725416741814269
+          "value": 0.20655820405592046
         },
         {
           "key": "WTI",
           "name": "WTI Oil",
-          "value": 0.13225476680326387
+          "value": 0.12663993888995254
         },
         {
           "key": "VIX",
           "name": "VIX",
-          "value": 0.04769234828515495
+          "value": 0.041657819972286174
         },
         {
           "key": "Treasury10Y",
           "name": "10Y Treasury",
-          "value": 0.01717488064738279
+          "value": 0.015215041265897684
         },
         {
           "key": "RSP_SPY_Ratio",
           "name": "Breadth (RSP/SPY)",
-          "value": 0.00603509503858229
+          "value": 0.007617547806396096
         },
         {
           "key": "Curve10Y2Y",
           "name": "10Y\u20132Y Curve",
-          "value": 0.00029867383792982514
+          "value": 0.0003332110864050794
         }
       ],
       "driver_groups": [
         {
           "name": "Equities",
-          "value": 0.3664031715124738
+          "value": 0.38091022972641125
         },
         {
           "name": "Credit",
-          "value": 0.2189219914956521
+          "value": 0.22868555500312693
         },
         {
           "name": "USD",
-          "value": 0.21725416741814269
+          "value": 0.20655820405592046
         },
         {
           "name": "Energy",
-          "value": 0.13225476680326387
+          "value": 0.12663993888995254
         },
         {
           "name": "Volatility",
-          "value": 0.04769234828515495
+          "value": 0.041657819972286174
         },
         {
           "name": "Rates",
-          "value": 0.017473554485312615
+          "value": 0.015548252352302764
         }
       ],
       "dominant_driver": "Equities",
       "history": [
-        {
-          "date": "2025-09-16",
-          "sigma_ratio": 0.04764372475561684,
-          "condition": 20.989123019440402,
-          "rotation": 3.2716250844749397,
-          "tangent_rotation": 3.637265446854955,
-          "status": "HIGH DEGENERACY"
-        },
         {
           "date": "2025-09-17",
           "sigma_ratio": 0.04736114280518017,
@@ -91419,101 +91445,17 @@
           "rotation": 1.598690070114936,
           "tangent_rotation": 2.482816536705384,
           "status": "NORMAL"
+        },
+        {
+          "date": "2026-09-17",
+          "sigma_ratio": 0.0806291992270483,
+          "condition": 12.402454812729117,
+          "rotation": 1.5925846034244728,
+          "tangent_rotation": 2.024045123260484,
+          "status": "NORMAL"
         }
       ],
       "history_detail": [
-        {
-          "date": "2025-09-16",
-          "spy_close": 652.7671509,
-          "sigma_min": 0.06541640567191769,
-          "sigma_max": 1.3730329861374992,
-          "sigma_ratio": 0.04764372475561684,
-          "condition_number": 20.989123019440402,
-          "rotation_deg": 3.2716250844749397,
-          "tangent_plane_rotation_deg": 3.637265446854955,
-          "sigma_ratio_percentile": 1.1904761904761905,
-          "condition_percentile": 98.80952380952381,
-          "rotation_percentile": 47.61904761904761,
-          "sigma_decline_fraction_10d": 0.8,
-          "condition_rise_fraction_10d": 0.8,
-          "status": "HIGH DEGENERACY",
-          "degeneracy_score": 6,
-          "reasons": [
-            "sigma-min / sigma-max is in the bottom 10% of its trailing-year range",
-            "condition number is above the 95th trailing-year percentile",
-            "sigma-min has declined on most of the last 10 sessions",
-            "conditioning has deteriorated on most of the last 10 sessions"
-          ],
-          "contributions": [
-            {
-              "key": "Treasury10Y",
-              "name": "10Y Treasury",
-              "value": 0.2913824067910156
-            },
-            {
-              "key": "RSP_SPY_Ratio",
-              "name": "Breadth (RSP/SPY)",
-              "value": 0.2401933582325173
-            },
-            {
-              "key": "VIX",
-              "name": "VIX",
-              "value": 0.19619791240090023
-            },
-            {
-              "key": "SPY_Volume_Z20",
-              "name": "SPY Volume",
-              "value": 0.14350155654137806
-            },
-            {
-              "key": "CreditSpread_BAA10Y",
-              "name": "Baa Credit Spread",
-              "value": 0.09815604668995527
-            },
-            {
-              "key": "WTI",
-              "name": "WTI Oil",
-              "value": 0.019414058440940483
-            },
-            {
-              "key": "Curve10Y2Y",
-              "name": "10Y\u20132Y Curve",
-              "value": 0.009401985053646804
-            },
-            {
-              "key": "BroadUSD",
-              "name": "Broad USD",
-              "value": 0.0017526758496461162
-            }
-          ],
-          "driver_groups": [
-            {
-              "name": "Equities",
-              "value": 0.3836949147738954
-            },
-            {
-              "name": "Rates",
-              "value": 0.30078439184466244
-            },
-            {
-              "name": "Volatility",
-              "value": 0.19619791240090023
-            },
-            {
-              "name": "Credit",
-              "value": 0.09815604668995527
-            },
-            {
-              "name": "Energy",
-              "value": 0.019414058440940483
-            },
-            {
-              "name": "USD",
-              "value": 0.0017526758496461162
-            }
-          ],
-          "dominant_driver": "Equities"
-        },
         {
           "date": "2025-09-17",
           "spy_close": 651.9561157,
@@ -113968,6 +113910,95 @@
             }
           ],
           "dominant_driver": "Equities"
+        },
+        {
+          "date": "2026-09-17",
+          "spy_close": null,
+          "sigma_min": 0.11810078571807796,
+          "sigma_max": 1.4647396582162662,
+          "sigma_ratio": 0.0806291992270483,
+          "condition_number": 12.402454812729117,
+          "rotation_deg": 1.5925846034244728,
+          "tangent_plane_rotation_deg": 2.024045123260484,
+          "sigma_ratio_percentile": 58.333333333333336,
+          "condition_percentile": 41.66666666666667,
+          "rotation_percentile": 18.253968253968253,
+          "sigma_decline_fraction_10d": 0.2,
+          "condition_rise_fraction_10d": 0.4,
+          "status": "NORMAL",
+          "degeneracy_score": 0,
+          "reasons": [
+            "geometry remains within its recent historical range"
+          ],
+          "contributions": [
+            {
+              "key": "SPY_Volume_Z20",
+              "name": "SPY Volume",
+              "value": 0.37329268192001513
+            },
+            {
+              "key": "CreditSpread_BAA10Y",
+              "name": "Baa Credit Spread",
+              "value": 0.22868555500312693
+            },
+            {
+              "key": "BroadUSD",
+              "name": "Broad USD",
+              "value": 0.20655820405592046
+            },
+            {
+              "key": "WTI",
+              "name": "WTI Oil",
+              "value": 0.12663993888995254
+            },
+            {
+              "key": "VIX",
+              "name": "VIX",
+              "value": 0.041657819972286174
+            },
+            {
+              "key": "Treasury10Y",
+              "name": "10Y Treasury",
+              "value": 0.015215041265897684
+            },
+            {
+              "key": "RSP_SPY_Ratio",
+              "name": "Breadth (RSP/SPY)",
+              "value": 0.007617547806396096
+            },
+            {
+              "key": "Curve10Y2Y",
+              "name": "10Y\u20132Y Curve",
+              "value": 0.0003332110864050794
+            }
+          ],
+          "driver_groups": [
+            {
+              "name": "Equities",
+              "value": 0.38091022972641125
+            },
+            {
+              "name": "Credit",
+              "value": 0.22868555500312693
+            },
+            {
+              "name": "USD",
+              "value": 0.20655820405592046
+            },
+            {
+              "name": "Energy",
+              "value": 0.12663993888995254
+            },
+            {
+              "name": "Volatility",
+              "value": 0.041657819972286174
+            },
+            {
+              "name": "Rates",
+              "value": 0.015548252352302764
+            }
+          ],
+          "dominant_driver": "Equities"
         }
       ],
       "daily_table": [
@@ -131310,6 +131341,23 @@
           "driver_equities_pct": 36.64031715124738,
           "driver_volatility_pct": 4.769234828515495,
           "spy_close": 754.0499877929688
+        },
+        {
+          "date": "2026-09-17",
+          "status": "NORMAL",
+          "degeneracy_score": 0,
+          "sigma_min": 0.11810078571807796,
+          "condition_number": 12.402454812729117,
+          "weak_rotation_deg": 1.5925846034244728,
+          "tangent_plane_rotation_deg": 2.024045123260484,
+          "dominant_driver": "Equities",
+          "driver_usd_pct": 20.655820405592046,
+          "driver_rates_pct": 1.5548252352302763,
+          "driver_credit_pct": 22.86855550031269,
+          "driver_energy_pct": 12.663993888995254,
+          "driver_equities_pct": 38.09102297264113,
+          "driver_volatility_pct": 4.165781997228617,
+          "spy_close": null
         }
       ]
     }
@@ -131317,50 +131365,39 @@
   "aggregate_contributions": [
     {
       "name": "Broad USD",
-      "value": 0.2888648911468122
+      "value": 0.2902778316510674
     },
     {
       "name": "Baa Credit Spread",
-      "value": 0.17927123396278333
-    },
-    {
-      "name": "10Y\u20132Y Curve",
-      "value": 0.17076955754840925
+      "value": 0.17646067286972833
     },
     {
       "name": "SPY Volume",
-      "value": 0.154536405502646
+      "value": 0.16754830259124412
+    },
+    {
+      "name": "10Y\u20132Y Curve",
+      "value": 0.16706207993048824
     },
     {
       "name": "WTI Oil",
-      "value": 0.10317047031968736
+      "value": 0.09505860373580372
     },
     {
       "name": "Breadth (RSP/SPY)",
-      "value": 0.06221638260328427
+      "value": 0.06839092944024401
     },
     {
       "name": "VIX",
-      "value": 0.03474246559056117
+      "value": 0.027682037213598857
     },
     {
       "name": "10Y Treasury",
-      "value": 0.006428593325816409
+      "value": 0.007519542567825374
     }
   ],
-  "interpretation": "The estimated market-response geometry is currently within its recent historical range. The dominant weak-direction components are Broad USD (29%), Baa Credit Spread (18%), 10Y\u20132Y Curve (17%).",
+  "interpretation": "The estimated market-response geometry is currently within its recent historical range. The dominant weak-direction components are Broad USD (29%), Baa Credit Spread (18%), SPY Volume (17%).",
   "status_history": [
-    {
-      "date": "2025-09-16",
-      "overall_status": "GEOMETRY SHIFT",
-      "confirming_windows": 1,
-      "shifting_or_worse_windows": 1,
-      "window_statuses": {
-        "63": "NORMAL",
-        "126": "NORMAL",
-        "252": "HIGH DEGENERACY"
-      }
-    },
     {
       "date": "2025-09-17",
       "overall_status": "GEOMETRY SHIFT",
@@ -134121,8 +134158,19 @@
         "126": "NORMAL",
         "252": "NORMAL"
       }
+    },
+    {
+      "date": "2026-09-17",
+      "overall_status": "NORMAL",
+      "confirming_windows": 0,
+      "shifting_or_worse_windows": 0,
+      "window_statuses": {
+        "63": "NORMAL",
+        "126": "NORMAL",
+        "252": "NORMAL"
+      }
     }
   ],
   "research_note": "Degeneracy flags describe the estimated local response geometry. They are not trading signals, probability forecasts, or proof of a classical fold/cusp catastrophe.",
-  "snapshot_generated_at": "2026-09-17T01:44:58.444818+00:00"
+  "snapshot_generated_at": "2026-09-18T01:34:24.891394+00:00"
 }
